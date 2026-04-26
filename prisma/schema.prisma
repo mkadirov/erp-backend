@@ -1,0 +1,176 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Company {
+  id        Int      @id @default(autoincrement())
+  name      String
+  phone     String?
+  address   String?
+
+  isActive  Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users             User[]
+  categories        Category[]
+  products          Product[]
+  projects          Project[]
+  transactions      Transaction[]
+  expenses          Expense[]
+  expenseCategories ExpenseCategory[]
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String
+  password  String
+
+  role      UserRole @default(ADMIN)
+  isActive  Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  companyId Int
+  company   Company @relation(fields: [companyId], references: [id])
+
+  transactions Transaction[]
+  expenses     Expense[]
+
+  @@unique([email, companyId])
+}
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  companyId Int
+  company   Company @relation(fields: [companyId], references: [id])
+
+  products Product[]
+
+  @@unique([name, companyId])
+}
+
+model Product {
+  id        Int      @id @default(autoincrement())
+  name      String
+  unit      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  companyId Int
+  company   Company @relation(fields: [companyId], references: [id])
+
+  categoryId Int
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  transactions Transaction[]
+
+  @@unique([name, companyId])
+}
+
+model Project {
+  id        Int      @id @default(autoincrement())
+  name      String
+  location  String?
+  startDate DateTime?
+  endDate   DateTime?
+  status    ProjectStatus @default(ACTIVE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  companyId Int
+  company   Company @relation(fields: [companyId], references: [id])
+
+  transactions Transaction[]
+  expenses     Expense[]
+}
+
+model Transaction {
+  id        Int             @id @default(autoincrement())
+  type      TransactionType
+  quantity  Float
+  price     Float?
+  date      DateTime        @default(now())
+  note      String?
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  companyId Int
+  company   Company @relation(fields: [companyId], references: [id])
+
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+
+  projectId Int?
+  project   Project? @relation(fields: [projectId], references: [id])
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+}
+
+model Expense {
+  id          Int      @id @default(autoincrement())
+  amount      Float
+  description String?
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  companyId Int
+  company   Company @relation(fields: [companyId], references: [id])
+
+  projectId Int?
+  project   Project? @relation(fields: [projectId], references: [id])
+
+  categoryId Int
+  category   ExpenseCategory @relation(fields: [categoryId], references: [id])
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+}
+
+model ExpenseCategory {
+  id        Int      @id @default(autoincrement())
+  name      String
+
+  companyId Int
+  company   Company @relation(fields: [companyId], references: [id])
+
+  expenses  Expense[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  MANAGER
+  ACCOUNTANT
+  WAREHOUSE
+}
+
+enum TransactionType {
+  IN
+  OUT
+}
+
+
+
+enum ProjectStatus {
+  ACTIVE
+  PAUSED
+  FINISHED
+}
