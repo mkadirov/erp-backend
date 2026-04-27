@@ -10,6 +10,10 @@ import expenseRoutes from "./modules/expense/expense.routes.js";
 import expenseCategoryRoutes from "./modules/expense-category/expenseCategory.routes.js";
 import projectSummaryRoutes from "./modules/project-summary/projectSummary.routes.js";
 import companyRoutes from "./modules/company/company.routes.js";
+import companyUserRoutes from "./modules/company-user/companyUser.routes.js";
+import dashboardRoutes from "./modules/dashboard/dashboard.routes.js";
+import auditLogRoutes from "./modules/audit-log/auditLog.routes.js";
+import warehouseDashboardRoutes from "./modules/warehouseDashboard/warehouseDashboard.routes.js";
 
 const app = express();
 
@@ -26,6 +30,10 @@ app.use("/api/expenses", expenseRoutes);
 app.use("/api/expense-categories", expenseCategoryRoutes);
 app.use("/api/projects", projectSummaryRoutes);
 app.use("/api/companies", companyRoutes);
+app.use("/api/company-users", companyUserRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/audit-logs", auditLogRoutes);
+app.use("/api/warehouse-dashboard", warehouseDashboardRoutes);
 
 app.get("/", (req, res) => {
   res.send("ERP Backend ishlayapti");

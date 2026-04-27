@@ -27,8 +27,8 @@ export async function getProjects(req, res) {
       data: projects,
     });
   } catch (error) {
-    return res.status(500).json({
-      message: "SERVER_ERROR",
+    return res.status(error.status || 500).json({
+      message: error.message || "SERVER_ERROR",
     });
   }
 }
@@ -61,6 +61,43 @@ export async function getProjectMaterials(req, res) {
     return res.json({
       message: "PROJECT_MATERIALS_FETCHED",
       data: materials,
+    });
+  } catch (error) {
+    return res.status(error.status || 500).json({
+      message: error.message || "SERVER_ERROR",
+    });
+  }
+}
+
+export async function updateProject(req, res) {
+  try {
+    const project = await projectService.updateProject({
+      projectId: req.params.id,
+      body: req.body,
+      user: req.user,
+    });
+
+    return res.json({
+      message: "PROJECT_UPDATED",
+      data: project,
+    });
+  } catch (error) {
+    return res.status(error.status || 500).json({
+      message: error.message || "SERVER_ERROR",
+    });
+  }
+}
+
+export async function deleteProject(req, res) {
+  try {
+    const project = await projectService.deleteProject({
+      projectId: req.params.id,
+      user: req.user,
+    });
+
+    return res.json({
+      message: "PROJECT_DELETED",
+      data: project,
     });
   } catch (error) {
     return res.status(error.status || 500).json({

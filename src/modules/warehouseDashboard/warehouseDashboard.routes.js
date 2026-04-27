@@ -1,16 +1,16 @@
 import express from "express";
+import { getWarehouseDashboard } from "./warehouseDashboard.controller.js";
 import { authMiddleware } from "../../middlewares/auth.middleware.js";
 import { requireRole } from "../../middlewares/role.middleware.js";
-import { getProjectSummary } from "./projectSummary.controller.js";
 
 const router = express.Router();
 
-// 📌 SUMMARY (ADMIN, MANAGER, ACCOUNTANT)
+router.use(authMiddleware);
+
 router.get(
-  "/:id/summary",
-  authMiddleware,
-  requireRole("ADMIN", "MANAGER", "ACCOUNTANT"),
-  getProjectSummary
+  "/",
+  requireRole("ADMIN", "WAREHOUSE"),
+  getWarehouseDashboard
 );
 
 export default router;

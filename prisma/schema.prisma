@@ -154,6 +154,17 @@ model ExpenseCategory {
   updatedAt DateTime @updatedAt
 }
 
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  action    String
+  entity    String
+  entityId  Int?
+  userId    Int?
+  companyId Int?
+  metadata  Json?
+  createdAt DateTime @default(now())
+}
+
 enum UserRole {
   SUPER_ADMIN
   ADMIN

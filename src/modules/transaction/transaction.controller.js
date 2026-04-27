@@ -27,8 +27,8 @@ export async function getTransactions(req, res) {
       data: transactions,
     });
   } catch (error) {
-    return res.status(500).json({
-      message: "SERVER_ERROR",
+    return res.status(error.status || 500).json({
+      message: error.message || "SERVER_ERROR",
     });
   }
 }
@@ -42,8 +42,99 @@ export async function getStock(req, res) {
       data: stock,
     });
   } catch (error) {
-    return res.status(500).json({
-      message: "SERVER_ERROR",
+    return res.status(error.status || 500).json({
+      message: error.message || "SERVER_ERROR",
+    });
+  }
+}
+
+export async function getTransactionById(req, res) {
+  try {
+    const transaction = await transactionService.getTransactionById({
+      transactionId: req.params.id,
+      user: req.user,
+    });
+
+    return res.json({
+      message: "TRANSACTION_FETCHED",
+      data: transaction,
+    });
+  } catch (error) {
+    return res.status(error.status || 500).json({
+      message: error.message || "SERVER_ERROR",
+    });
+  }
+}
+
+export async function getTransactionsByProduct(req, res) {
+  try {
+    const transactions = await transactionService.getTransactionsByProduct({
+      productId: req.params.productId,
+      user: req.user,
+    });
+
+    return res.json({
+      message: "PRODUCT_TRANSACTIONS_FETCHED",
+      data: transactions,
+    });
+  } catch (error) {
+    return res.status(error.status || 500).json({
+      message: error.message || "SERVER_ERROR",
+    });
+  }
+}
+
+export async function getTransactionsByProject(req, res) {
+  try {
+    const transactions = await transactionService.getTransactionsByProject({
+      projectId: req.params.projectId,
+      user: req.user,
+    });
+
+    return res.json({
+      message: "PROJECT_TRANSACTIONS_FETCHED",
+      data: transactions,
+    });
+  } catch (error) {
+    return res.status(error.status || 500).json({
+      message: error.message || "SERVER_ERROR",
+    });
+  }
+}
+
+export async function updateTransactionNote(req, res) {
+  try {
+    const transaction = await transactionService.updateTransactionNote({
+      transactionId: req.params.id,
+      body: req.body,
+      user: req.user,
+    });
+
+    return res.json({
+      message: "TRANSACTION_NOTE_UPDATED",
+      data: transaction,
+    });
+  } catch (error) {
+    return res.status(error.status || 500).json({
+      message: error.message || "SERVER_ERROR",
+    });
+  }
+}
+
+export async function deleteTransaction(req, res) {
+  try {
+    const transaction = await transactionService.deleteTransaction({
+      transactionId: req.params.id,
+      user: req.user,
+    });
+
+    return res.json({
+      message: "TRANSACTION_DELETED",
+      data: transaction,
+    });
+  } catch (error) {
+    return res.status(error.status || 500).json({
+      message: error.message || "SERVER_ERROR",
     });
   }
 }

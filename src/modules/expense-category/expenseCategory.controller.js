@@ -26,9 +26,46 @@ export async function getExpenseCategories(req, res) {
       message: "EXPENSE_CATEGORIES_FETCHED",
       data,
     });
-  } catch {
-    res.status(500).json({
-      message: "SERVER_ERROR",
+  } catch (err) {
+    res.status(err.status || 500).json({
+      message: err.message || "SERVER_ERROR",
+    });
+  }
+}
+
+export async function updateExpenseCategory(req, res) {
+  try {
+    const data = await service.updateExpenseCategory({
+      categoryId: req.params.id,
+      body: req.body,
+      user: req.user,
+    });
+
+    res.json({
+      message: "EXPENSE_CATEGORY_UPDATED",
+      data,
+    });
+  } catch (err) {
+    res.status(err.status || 500).json({
+      message: err.message || "SERVER_ERROR",
+    });
+  }
+}
+
+export async function deleteExpenseCategory(req, res) {
+  try {
+    const data = await service.deleteExpenseCategory({
+      categoryId: req.params.id,
+      user: req.user,
+    });
+
+    res.json({
+      message: "EXPENSE_CATEGORY_DELETED",
+      data,
+    });
+  } catch (err) {
+    res.status(err.status || 500).json({
+      message: err.message || "SERVER_ERROR",
     });
   }
 }

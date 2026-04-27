@@ -1,6 +1,8 @@
 import {
   createProductService,
   getProductsService,
+  updateProductService,
+  deleteProductService,
 } from "./product.service.js";
 
 export const createProduct = async (req, res) => {
@@ -23,6 +25,52 @@ export const getProducts = async (req, res) => {
     res.json({
       message: "PRODUCTS_FETCHED",
       products,
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const updateProduct = async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+
+    if (!id) {
+      return res.status(400).json({
+        message: "Invalid product id",
+      });
+    }
+
+    const product = await updateProductService(
+      id,
+      req.user.companyId,
+      req.body
+    );
+
+    res.json({
+      message: "PRODUCT_UPDATED",
+      product,
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const deleteProduct = async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+
+    if (!id) {
+      return res.status(400).json({
+        message: "Invalid product id",
+      });
+    }
+
+    const product = await deleteProductService(id, req.user.companyId);
+
+    res.json({
+      message: "PRODUCT_DELETED",
+      product,
     });
   } catch (error) {
     res.status(400).json({ message: error.message });
