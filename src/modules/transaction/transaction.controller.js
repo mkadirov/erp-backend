@@ -20,11 +20,14 @@ export async function createTransaction(req, res) {
 
 export async function getTransactions(req, res) {
   try {
-    const transactions = await transactionService.getTransactions(req.user);
+    const result = await transactionService.getTransactions({
+      query: req.query,
+      user: req.user,
+    });
 
-    return res.json({
+    return res.status(200).json({
       message: "TRANSACTIONS_FETCHED",
-      data: transactions,
+      data: result,
     });
   } catch (error) {
     return res.status(error.status || 500).json({

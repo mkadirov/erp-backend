@@ -1,4 +1,5 @@
 import prisma from "../../config/db.js";
+import { createAuditLog } from "../audit-log/auditLog.service.js";
 
 export async function createTransaction({ body, user }) {
   const { type, productId, quantity, price, projectId, note } = body;
@@ -67,7 +68,7 @@ export async function createTransaction({ body, user }) {
     });
   }
 
-  return prisma.transaction.create({
+  const transaction = await prisma.transaction.create({
     data: {
       type,
       productId: Number(productId),
@@ -79,28 +80,109 @@ export async function createTransaction({ body, user }) {
       userId: user.userId,
     },
   });
-}
 
-export async function getTransactions(user) {
-  return prisma.transaction.findMany({
-    where: {
-      companyId: user.companyId,
-    },
-    include: {
-      product: true,
-      project: true,
-      user: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-        },
-      },
-    },
-    orderBy: {
-      createdAt: "desc",
+  await createAuditLog({
+    action: "CREATE_TRANSACTION",
+    entity: "TRANSACTION",
+    entityId: transaction.id,
+    userId: user.userId,
+    companyId: user.companyId,
+    metadata: {
+      type: transaction.type,
+      productId: transaction.productId,
+      quantity: transaction.quantity,
+      price: transaction.price,
+      projectId: transaction.projectId,
+      note: transaction.note,
     },
   });
+
+  return transaction;
+}
+
+export async function getTransactions({ query, user }) {
+  const page = Number(query.page) || 1;
+  const limit = Number(query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  const search = query.search || "";
+  const type = query.type; // IN / OUT
+  const productId = query.productId;
+  const projectId = query.projectId;
+
+  const where = {
+    companyId: user.companyId,
+
+    ...(type && { type }),
+
+    ...(productId && { productId: Number(productId) }),
+
+    ...(projectId && { projectId: Number(projectId) }),
+
+    ...(search && {
+      OR: [
+        {
+          product: {
+            name: {
+              contains: search,
+              mode: "insensitive",
+            },
+          },
+        },
+        {
+          note: {
+            contains: search,
+            mode: "insensitive",
+          },
+        },
+      ],
+    }),
+  };
+
+  const [transactions, total] = await Promise.all([
+    prisma.transaction.findMany({
+      where,
+      skip,
+      take: limit,
+      include: {
+        product: {
+          select: {
+            id: true,
+            name: true,
+            unit: true,
+          },
+        },
+        project: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    }),
+
+    prisma.transaction.count({ where }),
+  ]);
+
+  return {
+    data: transactions,
+    pagination: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
 }
 
 export async function getStock(user) {
@@ -248,7 +330,7 @@ export async function updateTransactionNote({ transactionId, body, user }) {
     throw { status: 404, message: "TRANSACTION_NOT_FOUND" };
   }
 
-  return prisma.transaction.update({
+  const updatedTransaction = await prisma.transaction.update({
     where: {
       id: Number(transactionId),
     },
@@ -256,6 +338,20 @@ export async function updateTransactionNote({ transactionId, body, user }) {
       note: note || null,
     },
   });
+
+  await createAuditLog({
+    action: "UPDATE_TRANSACTION_NOTE",
+    entity: "TRANSACTION",
+    entityId: updatedTransaction.id,
+    userId: user.userId,
+    companyId: user.companyId,
+    metadata: {
+      oldNote: transaction.note,
+      newNote: updatedTransaction.note,
+    },
+  });
+
+  return updatedTransaction;
 }
 
 export async function deleteTransaction({ transactionId, user }) {
@@ -276,8 +372,7 @@ export async function deleteTransaction({ transactionId, user }) {
       companyId: user.companyId,
     });
 
-    const stockAfterDelete =
-      currentStock - Number(transaction.quantity);
+    const stockAfterDelete = currentStock - Number(transaction.quantity);
 
     if (stockAfterDelete < 0) {
       throw {
@@ -287,11 +382,29 @@ export async function deleteTransaction({ transactionId, user }) {
     }
   }
 
-  return prisma.transaction.delete({
+  const deletedTransaction = await prisma.transaction.delete({
     where: {
       id: Number(transactionId),
     },
   });
+
+  await createAuditLog({
+    action: "DELETE_TRANSACTION",
+    entity: "TRANSACTION",
+    entityId: deletedTransaction.id,
+    userId: user.userId,
+    companyId: user.companyId,
+    metadata: {
+      type: deletedTransaction.type,
+      productId: deletedTransaction.productId,
+      quantity: deletedTransaction.quantity,
+      price: deletedTransaction.price,
+      projectId: deletedTransaction.projectId,
+      note: deletedTransaction.note,
+    },
+  });
+
+  return deletedTransaction;
 }
 
 async function calculateProductStock({ productId, companyId }) {
